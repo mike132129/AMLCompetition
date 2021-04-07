@@ -9,18 +9,18 @@ class modified_bert_for_class(nn.Module):
     def __init__(self, model):
         super(modified_bert_for_class, self).__init__()
         self.model = model
-        self.cls_linear_1 = nn.Linear(768, 300)
-        self.cls_linear_2 = nn.Linear(300, 1)
+        self.cnnlayer = nn.Conv1d(768, 300, 3)
+        self.cls_linear = nn.Linear(300, 1)
         self.dropout_1 = nn.Dropout(0.5)
         self.dropout_2 = nn.Dropout(0.5)
 
     def forward(self, input_ids, token_type_ids, attention_mask, labels):
 
         bert_output = self.model(input_ids=input_ids,attention_mask=attention_mask, token_type_ids=token_type_ids)
-        pool_output = self.dropout_1(bert_output[1])
-        cls_logits = self.cls_linear_1(pool_output)
+        hidden_output = self.dropout_1(bert_output[0])
+        cls_logits = self.cnnlayer(hidden_output)
         cls_logits = self.dropout_2(cls_logits)
-        cls_logits = self.cls_linear_2(cls_logits)
+        cls_logits = self.cls_linear(cls_logits)
         cls_logits = cls_logits.squeeze(-1)
 
         if labels == None: # when predicting
